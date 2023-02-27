@@ -2,6 +2,7 @@ import streamlit as st
 import os
 from matplotlib import image
 import pandas as pd
+import io
 
 st.markdown('The Fortune 1000  Dataset Consist of Top 1000 ranked American Companies.')
 c=st.container()
@@ -21,17 +22,63 @@ img = image.imread(IMAGE_PATH)
 
 df = pd.read_csv(DATA_PATH)
 
-c.subheader(f' 1. The data set consist of {df.shape[1]} columns and {df.shape[0]} rows.')
+sel = st.selectbox('Select the feature',['rank','profit','revenue','num. of employees','state','sector'])
+if sel == 'rank':
+    values = st.slider(
+        'Select a range of Rank',
+        0, 1000, (25, 75))
+    dfi = df[(df[sel] <= values[1]) & (df[sel] >= values[0]) ]
+elif sel == 'profit':
+    values = st.slider(
+        'Select a range of Profit',
+        -6600.00, 95000.00, (25.00, 75.00))
+    dfi = df[(df[sel] <= values[1]) & (df[sel] >= values[0]) ]
+elif sel == 'revenue':
+    values = st.slider(
+        'Select a range of Revenue:',
+        2100.00, 470000.00, (2100.00, 100000.00))
+    dfi = df[(df[sel] <= values[1]) & (df[sel] >= values[0]) ]
+elif sel == 'num. of employees':
+    values = st.slider(
+        'Select a range of Employees',
+        100, 230000,(25, 75))
+    dfi = df[(df[sel] <= values[1]) & (df[sel] >= values[0]) ]
+elif sel == 'state':
+    values= st.selectbox('Select a State' , df['state'].unique())
+    dfi= df[df['state'] == values]
+elif sel == 'sector':
+    values= st.selectbox('Select a sector' , df['sector'].unique())
+    dfi= df[df['sector'] == values]
 
-c.subheader(f'2. Features based on which the Ranks are decided :')
-for i in df.columns:
-    st.text(i)
+st.dataframe(dfi)
+st.header(":blue[Details of the Dataset]")
 
-n = len(df.select_dtypes('number').columns)
-ca = len(df.select_dtypes('object').columns)
-st.subheader(f'3. Number of Numerical Feature are {n} and Number of Categorical feature are {ca}')
+data_info = st.radio('select to view the Details of the Dataset:',
+                      ('Head', 'Tail','Sample', 'Columns', 'Shape', 'Info', 'Descriptive Statistics'),
+                      horizontal=True)
 
-st.subheader(f'4. Description of Numerical  Columns:')
-st.dataframe(df.describe())
+if data_info == 'Shape':
+    st.write(f"Number of Rows:  {df.shape[0]}")
+    st.write(f"Number of Columns:  {df.shape[1]}")
+elif data_info == 'Head':
+    st.write(f'The Head of the DataFrame:')
+    st.write(df.head())
+elif data_info == 'Tail':
+    st.write(f'The tail of DataFrame : ')
+    st.write(df.tail())
+elif data_info == 'Sample':
+    st.write(f'Randomd sample from DataFrame :')
+    st.write(df.sample(10))  
+elif data_info == 'Columns':
+    dt = st.radio('select dtype' , ('number' , 'object'),horizontal=True)
+    for column in list(df.select_dtypes(dt).columns):
+        st.write(column)
+elif data_info == 'Info':
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    s = buffer.getvalue()
+    st.text(s)
+else:
+    st.write(df.describe())
 
 
